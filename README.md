@@ -1,5 +1,5 @@
 # SDString
-Secure Delete String. A CPP string class interchangable with std::string and std::wstring which zeros it's allocated memory before freeing it. It is intended to thwart memory sniffer malware from reading secret data from freed memory, as per PCI recommendataions among others.
+SDString or (S)ecure (D)elete String, is a CPP (C++17 +) string class interchangeable with std::string and std::wstring which zeros its allocated memory before freeing it. It is intended to thwart memory sniffer malware from reading secret data from freed memory, as per PCI and other security recommendations.
 
 ## Use
 Import into your project using:
@@ -15,7 +15,7 @@ Then write your application like this:
     {
         sdstring hi("Hello, World!");
       
-        std::court << hi << std::endl;
+        std::cout << hi << std::endl;
       
         return 0;
     }
