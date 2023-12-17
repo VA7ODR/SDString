@@ -1,4 +1,6 @@
 # SDString
+Copyright (c) 2023 James Baker
+
 SDString or (S)ecure (D)elete String, is a CPP (C++17 +) string class interchangeable with std::string and std::wstring which zeros its allocated memory before freeing it. It is intended to thwart memory sniffer malware from reading secret data from freed memory, as per PCI and other security recommendations.
 
 ## Use
