@@ -42,10 +42,22 @@ struct secure_delete_allocator {
 	typedef T& reference;
 	typedef const T& const_reference;
 
-	size_type max_size() const noexcept { return std::numeric_limits<size_type>::max() / sizeof(value_type); }
-	secure_delete_allocator() noexcept {}
-	template <class U> secure_delete_allocator (secure_delete_allocator<U> const&) noexcept {}
-	value_type* allocate (std::size_t n) { value_type* p = static_cast<value_type*>(malloc(n*sizeof(value_type))); return p;}
+	[[nodiscard]] size_type max_size() const noexcept
+	{
+		return std::numeric_limits<size_type>::max() / sizeof(value_type);
+	}
+
+	secure_delete_allocator() noexcept = default;
+
+	template <class U>
+	secure_delete_allocator(const secure_delete_allocator<U> &) noexcept
+	{}
+
+	value_type * allocate(std::size_t n)
+	{
+		auto * p = static_cast<value_type *>(malloc(n * sizeof(value_type)));
+		return p;
+	}
 	void deallocate (value_type* p, std::size_t n) { memset((void*)p, 0, n); free(p); }
 	template <class U> struct rebind { typedef secure_delete_allocator<U> other; };
 };
@@ -66,25 +78,23 @@ class basic_sdstring : public std::basic_string<charT, std::char_traits<charT>, 
 	public:
 		using base_type = std::basic_string<charT, std::char_traits<charT>, secure_delete_allocator<charT>>;
 
-		basic_sdstring(const basic_sdstring & rhs) : base_type(rhs.data(), rhs.size()) { }
-		
-		basic_sdstring(const base_type & rhs) : base_type(rhs) { }
+		basic_sdstring(const basic_sdstring & rhs) : base_type(rhs.data(), rhs.size()) {}
 
-		basic_sdstring(basic_sdstring && rhs) : base_type(std::move(rhs)) { }
-		
-		basic_sdstring(base_type && rhs) : base_type(std::move(rhs)) { }
+		basic_sdstring(const base_type & rhs) : base_type(rhs) {}
 
-		basic_sdstring(const std::basic_string<charT> & rhs) : base_type(rhs.data(), rhs.size()) { }
+		basic_sdstring(basic_sdstring && rhs) noexcept : base_type(std::move(rhs)) {}
 
-		basic_sdstring(std::basic_string<charT> && rhs) : base_type(std::move(rhs.data()), rhs.size()) { }
+		basic_sdstring(base_type && rhs) : base_type(std::move(rhs)) {}
+
+		basic_sdstring(const std::basic_string<charT> & rhs) : base_type(rhs.data(), rhs.size()) {}
 
 		basic_sdstring(const char* rhs, size_t size) : base_type(rhs, size) { }
 
-		basic_sdstring(const char* rhs) : base_type(rhs) { }
+		basic_sdstring(const char * rhs) : base_type(rhs) {}
 
 		basic_sdstring() : base_type() {}
 
-		~basic_sdstring() {  }
+		~basic_sdstring() = default;
 
 		using base_type::base_type;
 		using base_type::operator[];
@@ -104,16 +114,16 @@ class basic_sdstring : public std::basic_string<charT, std::char_traits<charT>, 
             return *this;
         }
 
-		basic_sdstring& operator=(basic_sdstring&& rhs)
-        {
-            if (&rhs != this) {
+		basic_sdstring & operator=(basic_sdstring && rhs) noexcept
+		{
+			if (&rhs != this) {
 				static_cast<base_type&>(*this) = static_cast<const base_type&&>(rhs);
             }
             return *this;
-        }
+		}
 
-		operator std::basic_string<charT>&() const
-        {
+		operator std::basic_string<charT> &() const
+		{
 			return *((std::basic_string<charT>*) this);
         }
 
@@ -191,7 +201,7 @@ inline basic_sdstring<charT> operator+(const basic_sdstring<charT> & lhs, const 
 	return ret;
 }
 
-template <typename charT, typename T, typename std::enable_if<std::is_same<T, basic_sdstring<charT>>::value>::type* = nullptr>
+template <typename charT, typename T, std::enable_if_t<std::is_same_v<T, basic_sdstring<charT>>> * = nullptr>
 inline basic_sdstring<charT> operator+(const basic_sdstring<charT> & lhs, const T & rhs)
 {
 	basic_sdstring<charT> ret;
@@ -231,13 +241,13 @@ inline std::basic_string<charT> operator+(const std::basic_string<charT> & lhs, 
 	return ret;
 }
 
-template <typename charT, class T, typename std::enable_if<std::is_same<T, std::basic_string<charT>>::value>::type* = nullptr>
+template <typename charT, class T, std::enable_if_t<std::is_same_v<T, std::basic_string<charT>>> * = nullptr>
 inline bool operator==(const T & lhs, const basic_sdstring<charT> & rhs)
 {
 	return (lhs == rhs.c_str());
 }
 
-template <typename charT, class T, typename std::enable_if<std::is_same<T, std::basic_string<charT>>::value>::type* = nullptr>
+template <typename charT, class T, std::enable_if_t<std::is_same_v<T, std::basic_string<charT>>> * = nullptr>
 inline bool operator!=(const T & lhs, const basic_sdstring<charT> & rhs)
 {
 	return (lhs != rhs.c_str());
@@ -258,7 +268,7 @@ class sdstreambuf : public std::basic_streambuf<charT>
 			return n;
 		}
 
-		virtual std::basic_ostream<char>::int_type overflow(typename std::basic_ostream<charT>::int_type c) override
+		std::basic_ostream<char>::int_type overflow(typename std::basic_ostream<charT>::int_type c) override
 		{
 			sBuffer.push_back((char)c);
 			return c;
