@@ -268,9 +268,9 @@ class sdstreambuf : public std::basic_streambuf<charT>
 			return n;
 		}
 
-		std::basic_ostream<char>::int_type overflow(typename std::basic_ostream<charT>::int_type c) override
+		typename std::basic_ostream<charT>::int_type overflow(typename std::basic_ostream<charT>::int_type c) override
 		{
-			sBuffer.push_back((char)c);
+			sBuffer.push_back((charT)c);
 			return c;
 		}
 };
